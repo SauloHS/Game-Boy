@@ -1,0 +1,2 @@
+This project, a Game Boy emulator, is written by me, Saulo Henrique, but entirely based on gb-book by aquova: https://github.com/aquova/gb-book/.
+At the time i am writing this note, no code by me was written, it was all following this book.
