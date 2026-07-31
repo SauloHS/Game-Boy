@@ -139,6 +139,29 @@ impl Cpu {
     pub fn write_ram(&mut self, addr: u16, val: u8) {
         todo!();
     }
+
+    pub fn dec_r8(&mut self, r: Regs) {
+        let val = self.get_r8(r);
+        let dec = val.wrapping_sub(1);
+        let set_h = check_h_borrow_u8(val, 1);
+
+        self.set_r8(r, dec);
+        self.set_flag(Flags::N, true);
+        self.set_flag(Flags::Z, dec == 0);
+        self.set_flag(Flags::H, set_h);
+    }
+
+    pub fn dec_r16(&mut self, r: Regs16) {
+        let val = self.get_r16(r);
+        let dec = val.wrapping_sub(1);
+        self.set_r16(r, dec);
+    }
+
+    pub fn inc_r16(&mut self, r: Regs16) {
+        let val = self.get_r16(r);
+        let inc = val.wrapping_add(1);
+        self.set_r16(r, inc);
+    }
 }
 
 impl Default for Cpu {
