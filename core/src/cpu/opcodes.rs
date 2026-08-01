@@ -3,27 +3,79 @@ use crate::utils::*;
 
 #[rustfmt::skip]
 const OPCODES: [fn(&mut Cpu) -> u8; 256] = [
-//  0x00,   0x01, 0x02, 0x03,   0x04,   0x05,   0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B,   0x0C,   0x0D,   0x0E, 0x0F
-    nop_00, todo, todo, inc_03, inc_04, dec_05, todo, todo, todo, todo, todo, dec_0b, inc_0c, dec_0d, todo, todo, // 0x00
-    todo,   todo, todo, inc_13, inc_14, dec_15, todo, todo, todo, todo, todo, dec_1b, inc_1c, dec_1d, todo, todo, // 0x10
-    todo,   todo, todo, inc_23, inc_24, dec_25, todo, todo, todo, todo, todo, dec_2b, inc_2c, dec_2d, todo, todo, // 0x20
-    todo,   todo, todo, inc_33, inc_34, dec_35, todo, todo, todo, todo, todo, dec_3b, inc_3c, dec_3d, todo, todo, // 0x30
-    todo,   todo, todo, todo,   todo,   todo,   todo, todo, todo, todo, todo, todo,   todo,   todo,   todo, todo, // 0x40
-    todo,   todo, todo, todo,   todo,   todo,   todo, todo, todo, todo, todo, todo,   todo,   todo,   todo, todo, // 0x50
-    todo,   todo, todo, todo,   todo,   todo,   todo, todo, todo, todo, todo, todo,   todo,   todo,   todo, todo, // 0x60
-    todo,   todo, todo, todo,   todo,   todo,   todo, todo, todo, todo, todo, todo,   todo,   todo,   todo, todo, // 0x70
-    todo,   todo, todo, todo,   todo,   todo,   todo, todo, todo, todo, todo, todo,   todo,   todo,   todo, todo, // 0x80
-    todo,   todo, todo, todo,   todo,   todo,   todo, todo, todo, todo, todo, todo,   todo,   todo,   todo, todo, // 0x90
-    todo,   todo, todo, todo,   todo,   todo,   todo, todo, todo, todo, todo, todo,   todo,   todo,   todo, todo, // 0xA0
-    todo,   todo, todo, todo,   todo,   todo,   todo, todo, todo, todo, todo, todo,   todo,   todo,   todo, todo, // 0xB0
-    todo,   todo, todo, todo,   todo,   todo,   todo, todo, todo, todo, todo, todo,   todo,   todo,   todo, todo, // 0xC0
-    todo,   todo, todo, todo,   todo,   todo,   todo, todo, todo, todo, todo, todo,   todo,   todo,   todo, todo, // 0xD0
-    todo,   todo, todo, todo,   todo,   todo,   todo, todo, todo, todo, todo, todo,   todo,   todo,   todo, todo, // 0xE0
-    todo,   todo, todo, todo,   todo,   todo,   todo, todo, todo, todo, todo, todo,   todo,   todo,   todo, todo, // 0xF0
+//  0x00,   0x01,  0x02,   0x03,  0x04,   0x05,   0x06,  0x07,  0x08,  0x09,  0x0A,  0x0B,   0x0C,   0x0D,   0x0E,  0x0F
+    nop_00, ld_01, ld_02, inc_03, inc_04, dec_05, ld_06, todo,  ld_08, todo,  ld_0a, dec_0b, inc_0c, dec_0d, ld_0e, todo,  // 0x00
+    todo,   ld_11, ld_12, inc_13, inc_14, dec_15, ld_16, todo,  todo,  todo,  ld_1a, dec_1b, inc_1c, dec_1d, ld_1e, todo,  // 0x10
+    todo,   ld_21, ld_22, inc_23, inc_24, dec_25, ld_26, todo,  todo,  todo,  ld_2a, dec_2b, inc_2c, dec_2d, ld_2e, todo,  // 0x20
+    todo,   ld_31, ld_32, inc_33, inc_34, dec_35, ld_36, todo,  todo,  todo,  ld_3a, dec_3b, inc_3c, dec_3d, ld_3e, todo,  // 0x30
+    ld_40,  ld_41, ld_42, ld_43,  ld_44,  ld_45,  ld_46, ld_47, ld_48, ld_49, ld_4a, ld_4b,  ld_4c,  ld_4d,  ld_4e, ld_4f, // 0x40
+    ld_50,  ld_51, ld_52, ld_53,  ld_54,  ld_55,  ld_56, ld_57, ld_58, ld_59, ld_5a, ld_5b,  ld_5c,  ld_5d,  ld_5e, ld_5f, // 0x50
+    ld_60,  ld_61, ld_62, ld_63,  ld_64,  ld_65,  ld_66, ld_67, ld_68, ld_69, ld_6a, ld_6b,  ld_6c,  ld_6d,  ld_6e, ld_6f, // 0x60
+    ld_70,  ld_71, ld_72, ld_73,  ld_74,  ld_75,  todo,  ld_77, ld_78, ld_79, ld_7a, ld_7b,  ld_7c,  ld_7d,  ld_7e, ld_7f, // 0x70
+    todo,   todo,  todo,  todo,   todo,   todo,   todo,  todo,  todo,  todo,  todo,  todo,   todo,   todo,   todo,  todo,  // 0x80
+    todo,   todo,  todo,  todo,   todo,   todo,   todo,  todo,  todo,  todo,  todo,  todo,   todo,   todo,   todo,  todo,  // 0x90
+    todo,   todo,  todo,  todo,   todo,   todo,   todo,  todo,  todo,  todo,  todo,  todo,   todo,   todo,   todo,  todo,  // 0xA0
+    todo,   todo,  todo,  todo,   todo,   todo,   todo,  todo,  todo,  todo,  todo,  todo,   todo,   todo,   todo,  todo,  // 0xB0
+    todo,   todo,  todo,  todo,   todo,   todo,   todo,  todo,  todo,  todo,  todo,  todo,   todo,   todo,   todo,  todo,  // 0xC0
+    todo,   todo,  todo,  todo,   todo,   todo,   todo,  todo,  todo,  todo,  todo,  todo,   todo,   todo,   todo,  todo,  // 0xD0
+    ld_e0,  todo,  ld_e2, todo,   todo,   todo,   todo,  todo,  todo,  todo,  ld_ea, todo,   todo,   todo,   todo,  todo,  // 0xE0
+    ld_f0,  todo,  ld_f2, todo,   todo,   todo,   todo,  todo,  ld_f8, ld_f9, ld_fa, todo,   todo,   todo,   todo,  todo,  // 0xF0
 ];
 
 fn todo(_cpu: &mut Cpu) -> u8 {
     todo!();
+}
+
+// LD BC, A
+fn ld_02(cpu: &mut Cpu) -> u8 {
+    let addr = cpu.get_r16(Regs16::BC);
+    let val = cpu.get_r8(Regs::A);
+    cpu.write_ram(addr, val);
+    2
+}
+
+// LD B, u8
+fn ld_06(cpu: &mut Cpu) -> u8 {
+    let val = cpu.fetch();
+    cpu.set_r8(Regs::B, val);
+    2
+}
+
+// LD A, [BC]
+fn ld_0a(cpu: &mut Cpu) -> u8 {
+    let addr = cpu.get_r16(Regs16::BC);
+    let val = cpu.read_ram(addr);
+    cpu.set_r8(Regs::A, val);
+    2
+}
+
+// LD C, u8
+fn ld_0e(cpu: &mut Cpu) -> u8 {
+    let val = cpu.fetch();
+    cpu.set_r8(Regs::C, val);
+    2
+}
+
+// LD DE, u16
+fn ld_11(cpu: &mut Cpu) -> u8 {
+    let val = cpu.fetch_u16();
+    cpu.set_r16(Regs16::DE, val);
+    3
+}
+
+// LD [DE], A
+fn ld_12(cpu: &mut Cpu) -> u8 {
+    let addr = cpu.get_r16(Regs16::DE);
+    let val = cpu.get_r8(Regs::A);
+    cpu.write_ram(addr, val);
+    2
+}
+
+// LD D, u8
+fn ld_16(cpu: &mut Cpu) -> u8 {
+    let val = cpu.fetch();
+    cpu.set_r8(Regs::D, val);
+    2
 }
 
 // NOP - No Operation
@@ -210,6 +262,21 @@ fn ld_e0(cpu: &mut Cpu) -> u8 {
     let val = cpu.get_r8(Regs::A);
     cpu.write_ram(addr, val);
     2
+}
+
+// LD HL, SP+i8
+fn ld_f8(cpu: &mut Cpu) -> u8 {
+    let offset = cpu.fetch() as i8 as i16 as u16;
+    let sp = cpu.get_r16(Regs16::SP);
+    let set_c = check_c_carry_u8(sp.low_byte(), offset.low_byte());
+    let set_h = check_h_carry_u8(sp.low_byte(), offset.low_byte());
+
+    cpu.set_r16(Regs16::HL, offset.wrapping_add(sp));
+    cpu.set_flag(Flags::Z, false);
+    cpu.set_flag(Flags::N, false);
+    cpu.set_flag(Flags::C, set_c);
+    cpu.set_flag(Flags::H, set_h);
+    3
 }
 
 pub fn execute(cpu: &mut Cpu) -> u8 {
