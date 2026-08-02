@@ -2,7 +2,7 @@ use crate::utils::*;
 
 #[derive(Copy, Clone)]
 pub struct Tile {
-    pixels: [[u8; 8]; 8],
+    pub pixels: [[u8; 8]; 8],
 }
 
 impl Tile {
@@ -10,6 +10,10 @@ impl Tile {
         Self {
             pixels: [[0; 8]; 8],
         }
+    }
+
+    pub fn get_row(&self, row: usize) -> [u8; 8] {
+        self.pixels[row]
     }
 
     pub fn read_u8(&self, offset: u16) -> u8 {
