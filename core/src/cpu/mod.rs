@@ -1,3 +1,4 @@
+use crate::bus::Bus;
 use crate::utils::*;
 pub mod opcodes;
 
@@ -12,11 +13,14 @@ pub struct Cpu {
     f: u8,
     h: u8,
     l: u8,
+    irq_enabled: bool,
+    halted: bool,
+    bus: Bus,
 }
 
 impl Cpu {
     pub fn new() -> Self {
-        Self {
+        let mut cpu = Cpu {
             pc: 0x0000,
             sp: 0x0000,
             a: 0x00,
@@ -27,7 +31,32 @@ impl Cpu {
             f: 0x00,
             h: 0x00,
             l: 0x00,
-        }
+            irq_enabled: false,
+            halted: false,
+            bus: Bus::new(),
+        };
+
+        cpu.write_ram(0xFF10, 0x80);
+        cpu.write_ram(0xFF11, 0xBF);
+        cpu.write_ram(0xFF12, 0xF3);
+        cpu.write_ram(0xFF14, 0xBF);
+        cpu.write_ram(0xFF16, 0x3F);
+        cpu.write_ram(0xFF19, 0xBF);
+        cpu.write_ram(0xFF1A, 0x7F);
+        cpu.write_ram(0xFF1B, 0xFF);
+        cpu.write_ram(0xFF1C, 0x9F);
+        cpu.write_ram(0xFF1E, 0xBF);
+        cpu.write_ram(0xFF20, 0xFF);
+        cpu.write_ram(0xFF23, 0xBF);
+        cpu.write_ram(0xFF24, 0x77);
+        cpu.write_ram(0xFF25, 0xF3);
+        cpu.write_ram(0xFF26, 0xF1);
+        cpu.write_ram(0xFF40, 0x91);
+        cpu.write_ram(0xFF47, 0xFC);
+        cpu.write_ram(0xFF48, 0xFF);
+        cpu.write_ram(0xFF49, 0xFF);
+
+        cpu
     }
 
     pub fn get_r8(&self, r: Regs) -> u8 {
@@ -141,11 +170,11 @@ impl Cpu {
     }
 
     pub fn read_ram(&self, addr: u16) -> u8 {
-        todo!();
+        self.bus.read_ram(addr)
     }
 
     pub fn write_ram(&mut self, addr: u16, val: u8) {
-        todo!();
+        self.bus.write_ram(addr, val);
     }
 
     pub fn inc_r8(&mut self, r: Regs) {
@@ -281,9 +310,9 @@ impl Cpu {
     }
 
     pub fn push(&mut self, val: u16) {
-        self.sp -= 2;
+        self.sp = self.sp.wrapping_sub(2);
         self.write_ram(self.sp, val.low_byte());
-        self.write_ram(self.sp, val.high_byte());
+        self.write_ram(self.sp + 1, val.high_byte());
     }
 
     pub fn get_pc(&self) -> u16 {
@@ -292,6 +321,15 @@ impl Cpu {
 
     pub fn set_pc(&mut self, val: u16) {
         self.pc = val;
+    }
+
+    pub fn tick(&mut self) -> bool {
+        let _cycles = if self.halted {
+            1
+        } else {
+            opcodes::execute(self)
+        };
+        false
     }
 
     pub fn rotate_left(&mut self, reg: Regs, carry: bool) {
@@ -320,6 +358,73 @@ impl Cpu {
         self.set_flag(Flags::N, false);
         self.set_flag(Flags::H, false);
         self.set_flag(Flags::C, lsb);
+    }
+    pub fn shift_left(&mut self, reg: Regs) {
+        let val = self.get_r8(reg);
+        let msb = val.get_bit(7);
+        let res = val.wrapping_shl(1);
+
+        self.set_r8(reg, res);
+        self.set_flag(Flags::Z, res == 0);
+        self.set_flag(Flags::N, false);
+        self.set_flag(Flags::H, false);
+        self.set_flag(Flags::C, msb);
+    }
+
+    pub fn shift_right(&mut self, reg: Regs, arith: bool) {
+        let val = self.get_r8(reg);
+        let lsb = val.get_bit(0);
+        let msb = val.get_bit(7);
+        let mut res = val.wrapping_shr(1);
+        if arith {
+            res.set_bit(7, msb);
+        }
+
+        self.set_r8(reg, res);
+        self.set_flag(Flags::Z, res == 0);
+        self.set_flag(Flags::N, false);
+        self.set_flag(Flags::H, false);
+        self.set_flag(Flags::C, lsb);
+    }
+
+    pub fn swap_bits(&mut self, reg: Regs) {
+        let val = self.get_r8(reg);
+        let low = val & 0xF;
+        let high = (val & 0xF) >> 4;
+        let res = (low << 4) | high;
+
+        self.set_r8(reg, res);
+        self.set_flag(Flags::Z, res == 0);
+        self.set_flag(Flags::N, false);
+        self.set_flag(Flags::H, false);
+        self.set_flag(Flags::C, false);
+    }
+
+    pub fn test_bit(&mut self, reg: Regs, bit: u8) {
+        let byte = self.get_r8(reg);
+        let val = byte.get_bit(bit);
+
+        self.set_flag(Flags::Z, !val);
+        self.set_flag(Flags::N, false);
+        self.set_flag(Flags::H, true);
+    }
+
+    pub fn write_bit(&mut self, reg: Regs, bit: u8, set: bool) {
+        let mut byte = self.get_r8(reg);
+        byte.set_bit(bit, set);
+        self.set_r8(reg, byte);
+    }
+
+    pub fn set_irq(&mut self, enabled: bool) {
+        self.irq_enabled = enabled;
+    }
+
+    pub fn set_halted(&mut self, halted: bool) {
+        self.halted = halted;
+    }
+
+    pub fn load_rom(&mut self, _rom: &[u8]) {
+        unimplemented!();
     }
 }
 
